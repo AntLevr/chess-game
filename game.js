@@ -1,19 +1,21 @@
-class CheckersGame {
+class TerritoryWarGame {
     constructor() {
         this.board = [];
-        this.currentPlayer = 'red';
-        this.selectedPiece = null;
-        this.validMoves = [];
-        this.mustCapture = false;
-        this.capturingPiece = null;
+        this.players = ['red', 'blue', 'green', 'yellow'];
+        this.currentPlayerIndex = 0;
+        this.selectedTerritory = null;
+        this.gamePhase = 'setup';
+        this.reinforcements = 0;
+        this.conqueredTerritories = 0;
         this.gameOver = false;
+        this.diceResults = [];
         
         this.init();
     }
 
     init() {
         this.createBoard();
-        this.setupPieces();
+        this.setupTerritories();
         this.renderBoard();
         this.setupEventListeners();
         this.updateUI();
@@ -21,67 +23,137 @@ class CheckersGame {
 
     createBoard() {
         this.board = [];
-        for (let row = 0; row < 8; row++) {
+        for (let row = 0; row < 10; row++) {
             this.board[row] = [];
-            for (let col = 0; col < 8; col++) {
-                this.board[row][col] = null;
+            for (let col = 0; col < 10; col++) {
+                this.board[row][col] = {
+                    owner: null,
+                    troops: 0
+                };
             }
         }
     }
 
-    setupPieces() {
-        for (let row = 0; row < 8; row++) {
-            for (let col = 0; col < 8; col++) {
-                if ((row + col) % 2 === 1) {
-                    if (row < 3) {
-                        this.board[row][col] = {
-                            player: 'blue',
-                            isKing: false
-                        };
-                    } else if (row > 4) {
-                        this.board[row][col] = {
-                            player: 'red',
-                            isKing: false
-                        };
-                    }
+    setupTerritories() {
+        const territories = [
+            { row: 0, col: 0, owner: 'red', troops: 3 },
+            { row: 0, col: 1, owner: 'red', troops: 2 },
+            { row: 0, col: 2, owner: 'red', troops: 2 },
+            { row: 1, col: 0, owner: 'red', troops: 2 },
+            { row: 1, col: 1, owner: 'red', troops: 3 },
+            { row: 9, col: 9, owner: 'blue', troops: 3 },
+            { row: 9, col: 8, owner: 'blue', troops: 2 },
+            { row: 9, col: 7, owner: 'blue', troops: 2 },
+            { row: 8, col: 9, owner: 'blue', troops: 2 },
+            { row: 8, col: 8, owner: 'blue', troops: 3 },
+            { row: 0, col: 9, owner: 'green', troops: 3 },
+            { row: 0, col: 8, owner: 'green', troops: 2 },
+            { row: 1, col: 9, owner: 'green', troops: 2 },
+            { row: 1, col: 8, owner: 'green', troops: 2 },
+            { row: 9, col: 0, owner: 'yellow', troops: 3 },
+            { row: 9, col: 1, owner: 'yellow', troops: 2 },
+            { row: 8, col: 0, owner: 'yellow', troops: 2 },
+            { row: 8, col: 1, owner: 'yellow', troops: 2 }
+        ];
+
+        territories.forEach(t => {
+            this.board[t.row][t.col].owner = t.owner;
+            this.board[t.row][t.col].troops = t.troops;
+        });
+
+        this.gamePhase = 'reinforce';
+        this.calculateReinforcements();
+    }
+
+    calculateReinforcements() {
+        const currentPlayer = this.players[this.currentPlayerIndex];
+        let territoriesCount = 0;
+        
+        for (let row = 0; row < 10; row++) {
+            for (let col = 0; col < 10; col++) {
+                if (this.board[row][col].owner === currentPlayer) {
+                    territoriesCount++;
                 }
             }
         }
+        
+        this.reinforcements = Math.max(3, Math.floor(territoriesCount / 3));
     }
 
     renderBoard() {
         const boardElement = document.getElementById('board');
         boardElement.innerHTML = '';
 
-        for (let row = 0; row < 8; row++) {
-            for (let col = 0; col < 8; col++) {
+        for (let row = 0; row < 10; row++) {
+            for (let col = 0; col < 10; col++) {
                 const cell = document.createElement('div');
-                cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                cell.className = 'territory';
                 cell.dataset.row = row;
                 cell.dataset.col = col;
 
-                const piece = this.board[row][col];
-                if (piece) {
-                    const pieceElement = document.createElement('div');
-                    pieceElement.className = `piece ${piece.player}`;
-                    if (piece.isKing) {
-                        pieceElement.classList.add('king');
-                        pieceElement.textContent = '♔';
-                    }
-                    cell.appendChild(pieceElement);
+                const territory = this.board[row][col];
+                if (territory.owner) {
+                    cell.classList.add(territory.owner);
+                    cell.innerHTML = `
+                        <div class="troops">${territory.troops}</div>
+                    `;
                 }
 
                 boardElement.appendChild(cell);
             }
         }
+
+        this.highlightTerritories();
+    }
+
+    highlightTerritories() {
+        document.querySelectorAll('.territory').forEach(cell => {
+            cell.classList.remove('selected', 'valid-move', 'attack-move');
+        });
+
+        if (this.selectedTerritory) {
+            const selectedCell = document.querySelector(`[data-row="${this.selectedTerritory.row}"][data-col="${this.selectedTerritory.col}"]`);
+            if (selectedCell) {
+                selectedCell.classList.add('selected');
+            }
+
+            const neighbors = this.getNeighbors(this.selectedTerritory.row, this.selectedTerritory.col);
+            neighbors.forEach(n => {
+                const cell = document.querySelector(`[data-row="${n.row}"][data-col="${n.col}"]`);
+                if (cell) {
+                    const territory = this.board[n.row][n.col];
+                    if (territory.owner === this.players[this.currentPlayerIndex]) {
+                        cell.classList.add('valid-move');
+                    } else if (territory.owner && territory.owner !== this.players[this.currentPlayerIndex]) {
+                        cell.classList.add('attack-move');
+                    }
+                }
+            });
+        }
+    }
+
+    getNeighbors(row, col) {
+        const neighbors = [];
+        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+
+        for (const [dr, dc] of directions) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 10) {
+                neighbors.push({ row: newRow, col: newCol });
+            }
+        }
+
+        return neighbors;
     }
 
     setupEventListeners() {
         const board = document.getElementById('board');
-        board.addEventListener('click', (e) => this.handleCellClick(e));
+        board.addEventListener('click', (e) => this.handleTerritoryClick(e));
 
         document.getElementById('restart-btn').addEventListener('click', () => this.restart());
         document.getElementById('rules-btn').addEventListener('click', () => this.showRules());
+        document.getElementById('end-turn-btn').addEventListener('click', () => this.endTurn());
         document.getElementById('play-again-btn').addEventListener('click', () => {
             this.hideModal('game-over-modal');
             this.restart();
@@ -100,245 +172,218 @@ class CheckersGame {
         });
     }
 
-    handleCellClick(e) {
+    handleTerritoryClick(e) {
         if (this.gameOver) return;
 
-        const cell = e.target.closest('.cell');
+        const cell = e.target.closest('.territory');
         if (!cell) return;
 
         const row = parseInt(cell.dataset.row);
         const col = parseInt(cell.dataset.col);
+        const territory = this.board[row][col];
+        const currentPlayer = this.players[this.currentPlayerIndex];
 
-        if (this.capturingPiece) {
-            this.handleCaptureMove(row, col);
-        } else {
-            this.handleNormalClick(row, col);
-        }
-    }
-
-    handleNormalClick(row, col) {
-        const piece = this.board[row][col];
-
-        if (piece && piece.player === this.currentPlayer) {
-            this.selectPiece(row, col);
-        } else if (this.selectedPiece) {
-            this.tryMove(row, col);
-        }
-    }
-
-    selectPiece(row, col) {
-        this.selectedPiece = { row, col };
-        this.validMoves = this.getValidMoves(row, col);
-        
-        this.highlightCells();
-    }
-
-    getValidMoves(row, col) {
-        const piece = this.board[row][col];
-        if (!piece) return [];
-
-        const moves = [];
-        const directions = piece.isKing 
-            ? [[-1, -1], [-1, 1], [1, -1], [1, 1]]
-            : piece.player === 'red' 
-                ? [[-1, -1], [-1, 1]]
-                : [[1, -1], [1, 1]];
-
-        for (const [dr, dc] of directions) {
-            const newRow = row + dr;
-            const newCol = col + dc;
-
-            if (this.isValidPosition(newRow, newCol)) {
-                if (!this.board[newRow][newCol]) {
-                    moves.push({ row: newRow, col: newCol, type: 'move' });
-                } else if (this.board[newRow][newCol].player !== piece.player) {
-                    const jumpRow = newRow + dr;
-                    const jumpCol = newCol + dc;
-                    
-                    if (this.isValidPosition(jumpRow, jumpCol) && !this.board[jumpRow][jumpCol]) {
-                        moves.push({ 
-                            row: jumpRow, 
-                            col: jumpCol, 
-                            type: 'capture',
-                            capturedRow: newRow,
-                            capturedCol: newCol
-                        });
+        if (this.gamePhase === 'reinforce') {
+            if (territory.owner === currentPlayer && this.reinforcements > 0) {
+                territory.troops++;
+                this.reinforcements--;
+                this.renderBoard();
+                this.updateUI();
+                
+                if (this.reinforcements === 0) {
+                    this.gamePhase = 'attack';
+                }
+            }
+        } else if (this.gamePhase === 'attack') {
+            if (!this.selectedTerritory) {
+                if (territory.owner === currentPlayer && territory.troops > 1) {
+                    this.selectedTerritory = { row, col };
+                    this.renderBoard();
+                }
+            } else {
+                const selectedTerritory = this.board[this.selectedTerritory.row][this.selectedTerritory.col];
+                
+                if (row === this.selectedTerritory.row && col === this.selectedTerritory.col) {
+                    this.selectedTerritory = null;
+                    this.renderBoard();
+                } else if (territory.owner === currentPlayer && territory.troops > 1) {
+                    this.selectedTerritory = { row, col };
+                    this.renderBoard();
+                } else if (territory.owner && territory.owner !== currentPlayer) {
+                    if (this.isNeighbor(this.selectedTerritory.row, this.selectedTerritory.col, row, col)) {
+                        this.attack(this.selectedTerritory.row, this.selectedTerritory.col, row, col);
                     }
                 }
             }
         }
-
-        return moves;
     }
 
-    isValidPosition(row, col) {
-        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    isNeighbor(row1, col1, row2, col2) {
+        const rowDiff = Math.abs(row1 - row2);
+        const colDiff = Math.abs(col1 - col2);
+        return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
     }
 
-    tryMove(row, col) {
-        const move = this.validMoves.find(m => m.row === row && m.col === col);
-        
-        if (move) {
-            if (move.type === 'capture') {
-                this.executeCapture(move);
-            } else {
-                this.executeMove(move);
-            }
-        } else {
-            this.clearSelection();
+    attack(fromRow, fromCol, toRow, toCol) {
+        const attacker = this.board[fromRow][fromCol];
+        const defender = this.board[toRow][toCol];
+
+        const attackDice = Math.min(3, attacker.troops - 1);
+        const defendDice = Math.min(2, defender.troops);
+
+        const attackRolls = [];
+        const defendRolls = [];
+
+        for (let i = 0; i < attackDice; i++) {
+            attackRolls.push(Math.floor(Math.random() * 6) + 1);
         }
-    }
+        for (let i = 0; i < defendDice; i++) {
+            defendRolls.push(Math.floor(Math.random() * 6) + 1);
+        }
 
-    executeMove(move) {
-        const piece = this.board[this.selectedPiece.row][this.selectedPiece.col];
-        this.board[move.row][move.col] = piece;
-        this.board[this.selectedPiece.row][this.selectedPiece.col] = null;
+        attackRolls.sort((a, b) => b - a);
+        defendRolls.sort((a, b) => b - a);
 
-        this.checkKingPromotion(move.row, move.col);
-        this.switchPlayer();
-        this.clearSelection();
+        this.diceResults = {
+            attack: attackRolls,
+            defend: defendRolls
+        };
+
+        let attackLosses = 0;
+        let defendLosses = 0;
+
+        const minRolls = Math.min(attackRolls.length, defendRolls.length);
+        for (let i = 0; i < minRolls; i++) {
+            if (attackRolls[i] > defendRolls[i]) {
+                defendLosses++;
+            } else {
+                attackLosses++;
+            }
+        }
+
+        defender.troops -= defendLosses;
+        attacker.troops -= attackLosses;
+
+        if (defender.troops <= 0) {
+            defender.owner = attacker.owner;
+            defender.troops = 1;
+            attacker.troops--;
+            this.conqueredTerritories++;
+        }
+
+        this.selectedTerritory = null;
         this.renderBoard();
+        this.showBattleResult(attackRolls, defendRolls, attackLosses, defendLosses);
         this.updateUI();
         this.checkGameOver();
     }
 
-    executeCapture(move) {
-        const piece = this.board[this.selectedPiece.row][this.selectedPiece.col];
-        this.board[move.row][move.col] = piece;
-        this.board[this.selectedPiece.row][this.selectedPiece.col] = null;
-        this.board[move.capturedRow][move.capturedCol] = null;
-
-        this.checkKingPromotion(move.row, move.col);
-
-        const additionalCaptures = this.getValidMoves(move.row, move.col)
-            .filter(m => m.type === 'capture');
-
-        if (additionalCaptures.length > 0) {
-            this.capturingPiece = { row: move.row, col: move.col };
-            this.selectedPiece = { row: move.row, col: move.col };
-            this.validMoves = additionalCaptures;
-            this.renderBoard();
-            this.highlightCells();
-        } else {
-            this.switchPlayer();
-            this.clearSelection();
-            this.renderBoard();
-            this.updateUI();
-            this.checkGameOver();
-        }
-    }
-
-    handleCaptureMove(row, col) {
-        const move = this.validMoves.find(m => m.row === row && m.col === col);
+    showBattleResult(attackRolls, defendRolls, attackLosses, defendLosses) {
+        const modal = document.getElementById('battle-modal');
+        const content = document.getElementById('battle-result-content');
         
-        if (move) {
-            this.executeCapture(move);
-        }
+        content.innerHTML = `
+            <h3>战斗结果</h3>
+            <div class="battle-info">
+                <div class="attack-info">
+                    <h4>攻击方</h4>
+                    <p>骰子点数: ${attackRolls.join(', ')}</p>
+                    <p>损失: ${attackLosses}</p>
+                </div>
+                <div class="defend-info">
+                    <h4>防守方</h4>
+                    <p>骰子点数: ${defendRolls.join(', ')}</p>
+                    <p>损失: ${defendLosses}</p>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 2000);
     }
 
-    checkKingPromotion(row, col) {
-        const piece = this.board[row][col];
-        if (!piece.isKing) {
-            if ((piece.player === 'red' && row === 0) || 
-                (piece.player === 'blue' && row === 7)) {
-                piece.isKing = true;
-            }
-        }
-    }
-
-    switchPlayer() {
-        this.currentPlayer = this.currentPlayer === 'red' ? 'blue' : 'red';
-        this.capturingPiece = null;
-    }
-
-    clearSelection() {
-        this.selectedPiece = null;
-        this.validMoves = [];
-        this.clearHighlights();
-    }
-
-    highlightCells() {
-        this.clearHighlights();
-
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach(cell => {
-            const row = parseInt(cell.dataset.row);
-            const col = parseInt(cell.dataset.col);
-
-            if (this.selectedPiece && 
-                row === this.selectedPiece.row && 
-                col === this.selectedPiece.col) {
-                cell.classList.add('selected');
-            }
-
-            const move = this.validMoves.find(m => m.row === row && m.col === col);
-            if (move) {
-                if (move.type === 'capture') {
-                    cell.classList.add('capture-move');
-                } else {
-                    cell.classList.add('valid-move');
-                }
-            }
-        });
-    }
-
-    clearHighlights() {
-        document.querySelectorAll('.cell').forEach(cell => {
-            cell.classList.remove('selected', 'valid-move', 'capture-move');
-        });
+    endTurn() {
+        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        this.selectedTerritory = null;
+        this.gamePhase = 'reinforce';
+        this.calculateReinforcements();
+        this.renderBoard();
+        this.updateUI();
     }
 
     updateUI() {
-        document.getElementById('player-red').classList.toggle('active', this.currentPlayer === 'red');
-        document.getElementById('player-blue').classList.toggle('active', this.currentPlayer === 'blue');
+        const currentPlayer = this.players[this.currentPlayerIndex];
+        
+        document.querySelectorAll('.player').forEach(p => {
+            p.classList.remove('active');
+        });
+        document.getElementById(`player-${currentPlayer}`).classList.add('active');
+        
         document.getElementById('turn-indicator').textContent = 
-            this.currentPlayer === 'red' ? '红方回合' : '蓝方回合';
+            `${this.getPlayerName(currentPlayer)}回合`;
+        
+        document.getElementById('game-phase').textContent = 
+            this.gamePhase === 'reinforce' ? '增兵阶段' : '攻击阶段';
+        
+        document.getElementById('reinforcements').textContent = this.reinforcements;
 
-        const redPieces = this.countPieces('red');
-        const bluePieces = this.countPieces('blue');
-        document.getElementById('red-pieces').textContent = redPieces;
-        document.getElementById('blue-pieces').textContent = bluePieces;
+        this.updatePlayerStats();
     }
 
-    countPieces(player) {
-        let count = 0;
-        for (let row = 0; row < 8; row++) {
-            for (let col = 0; col < 8; col++) {
-                if (this.board[row][col] && this.board[row][col].player === player) {
-                    count++;
-                }
-            }
-        }
-        return count;
+    getPlayerName(player) {
+        const names = {
+            'red': '红方',
+            'blue': '蓝方',
+            'green': '绿方',
+            'yellow': '黄方'
+        };
+        return names[player];
     }
 
-    checkGameOver() {
-        const redPieces = this.countPieces('red');
-        const bluePieces = this.countPieces('blue');
-
-        if (redPieces === 0) {
-            this.endGame('蓝方获胜！');
-        } else if (bluePieces === 0) {
-            this.endGame('红方获胜！');
-        } else if (!this.hasValidMoves(this.currentPlayer)) {
-            const winner = this.currentPlayer === 'red' ? '蓝方' : '红方';
-            this.endGame(`${winner}获胜！`);
-        }
-    }
-
-    hasValidMoves(player) {
-        for (let row = 0; row < 8; row++) {
-            for (let col = 0; col < 8; col++) {
-                const piece = this.board[row][col];
-                if (piece && piece.player === player) {
-                    const moves = this.getValidMoves(row, col);
-                    if (moves.length > 0) {
-                        return true;
+    updatePlayerStats() {
+        this.players.forEach(player => {
+            let territories = 0;
+            let troops = 0;
+            
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    if (this.board[row][col].owner === player) {
+                        territories++;
+                        troops += this.board[row][col].troops;
                     }
                 }
             }
+            
+            document.getElementById(`${player}-territories`).textContent = territories;
+            document.getElementById(`${player}-troops`).textContent = troops;
+        });
+    }
+
+    checkGameOver() {
+        const activePlayers = [];
+        
+        for (const player of this.players) {
+            let hasTerritories = false;
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    if (this.board[row][col].owner === player) {
+                        hasTerritories = true;
+                        break;
+                    }
+                }
+                if (hasTerritories) break;
+            }
+            if (hasTerritories) {
+                activePlayers.push(player);
+            }
         }
-        return false;
+
+        if (activePlayers.length === 1) {
+            this.endGame(`${this.getPlayerName(activePlayers[0])}获胜！`);
+        }
     }
 
     endGame(message) {
@@ -348,14 +393,16 @@ class CheckersGame {
     }
 
     restart() {
-        this.currentPlayer = 'red';
-        this.selectedPiece = null;
-        this.validMoves = [];
-        this.capturingPiece = null;
+        this.currentPlayerIndex = 0;
+        this.selectedTerritory = null;
+        this.gamePhase = 'setup';
+        this.reinforcements = 0;
+        this.conqueredTerritories = 0;
         this.gameOver = false;
+        this.diceResults = [];
         
         this.createBoard();
-        this.setupPieces();
+        this.setupTerritories();
         this.renderBoard();
         this.updateUI();
     }
@@ -370,5 +417,5 @@ class CheckersGame {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new CheckersGame();
+    new TerritoryWarGame();
 });

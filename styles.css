@@ -19,7 +19,7 @@ body {
     border-radius: 20px;
     padding: 30px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 900px;
+    max-width: 1200px;
     width: 100%;
 }
 
@@ -35,48 +35,17 @@ h1 {
     margin-bottom: 20px;
 }
 
-.player-info {
+.phase-info {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 20px;
     align-items: center;
     background: #f8f9fa;
     padding: 15px;
     border-radius: 10px;
-    position: relative;
-}
-
-.player {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.player.active {
-    background: #e3f2fd;
-    box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
-}
-
-.player-icon {
-    font-size: 2em;
-}
-
-.player-name {
-    font-weight: bold;
-    color: #333;
-}
-
-.player-pieces {
-    color: #666;
-    font-size: 0.9em;
 }
 
 .turn-indicator {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     background: #4caf50;
     color: white;
     padding: 8px 20px;
@@ -87,11 +56,59 @@ h1 {
 
 @keyframes pulse {
     0%, 100% {
-        transform: translateX(-50%) scale(1);
+        transform: scale(1);
     }
     50% {
-        transform: translateX(-50%) scale(1.05);
+        transform: scale(1.05);
     }
+}
+
+.game-phase, .reinforcements-info {
+    color: #333;
+    font-weight: 500;
+}
+
+.players-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    border-radius: 10px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.player.active {
+    background: #e3f2fd;
+    box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
+    border-color: #2196f3;
+}
+
+.player-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.player-name {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.player-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.9em;
+    color: #666;
 }
 
 .board-container {
@@ -102,16 +119,16 @@ h1 {
 
 .board {
     display: grid;
-    grid-template-columns: repeat(8, 60px);
-    grid-template-rows: repeat(8, 60px);
-    gap: 2px;
-    background: #8b4513;
+    grid-template-columns: repeat(10, 60px);
+    grid-template-rows: repeat(10, 60px);
+    gap: 3px;
+    background: #2c3e50;
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-.cell {
+.territory {
     width: 60px;
     height: 60px;
     display: flex;
@@ -120,75 +137,63 @@ h1 {
     cursor: pointer;
     transition: all 0.2s ease;
     border-radius: 4px;
+    background: #ecf0f1;
+    position: relative;
 }
 
-.cell.light {
-    background: #f0d9b5;
-}
-
-.cell.dark {
-    background: #b58863;
-}
-
-.cell:hover {
+.territory:hover {
     transform: scale(1.05);
     z-index: 1;
 }
 
-.cell.selected {
-    background: #ffd700 !important;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-}
-
-.cell.valid-move {
-    background: #90ee90 !important;
-    box-shadow: 0 0 8px rgba(144, 238, 144, 0.8);
-}
-
-.cell.capture-move {
-    background: #ff6b6b !important;
-    box-shadow: 0 0 8px rgba(255, 107, 107, 0.8);
-}
-
-.piece {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5em;
-    font-weight: bold;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-.piece.red {
+.territory.red {
     background: linear-gradient(145deg, #ff6b6b, #ee5a5a);
     color: white;
-    border: 3px solid #cc4444;
 }
 
-.piece.blue {
+.territory.blue {
     background: linear-gradient(145deg, #4dabf7, #339af0);
     color: white;
-    border: 3px solid #228be6;
 }
 
-.piece:hover {
+.territory.green {
+    background: linear-gradient(145deg, #51cf66, #40c057);
+    color: white;
+}
+
+.territory.yellow {
+    background: linear-gradient(145deg, #ffd43b, #fab005);
+    color: #333;
+}
+
+.territory.selected {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.9);
+    border: 3px solid #ffd700;
     transform: scale(1.1);
+    z-index: 2;
 }
 
-.piece.king {
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-    border-color: #ffd700;
+.territory.valid-move {
+    box-shadow: 0 0 10px rgba(144, 238, 144, 0.8);
+    border: 2px solid #90ee90;
+}
+
+.territory.attack-move {
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
+    border: 2px solid #ff6b6b;
+}
+
+.troops {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .controls {
     display: flex;
     justify-content: center;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -248,9 +253,15 @@ h1 {
     padding: 30px;
     border-radius: 15px;
     width: 90%;
-    max-width: 600px;
+    max-width: 700px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     animation: slideIn 0.3s ease;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.battle-content {
+    max-width: 400px;
 }
 
 @keyframes slideIn {
@@ -301,6 +312,36 @@ h1 {
     line-height: 1.6;
 }
 
+.battle-info {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+}
+
+.attack-info, .defend-info {
+    text-align: center;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.attack-info {
+    background: #ffebee;
+}
+
+.defend-info {
+    background: #e3f2fd;
+}
+
+.attack-info h4, .defend-info h4 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.attack-info p, .defend-info p {
+    margin: 5px 0;
+    color: #666;
+}
+
 #winner-text {
     text-align: center;
     font-size: 1.8em;
@@ -322,29 +363,25 @@ h1 {
     }
 
     .board {
-        grid-template-columns: repeat(8, 45px);
-        grid-template-rows: repeat(8, 45px);
+        grid-template-columns: repeat(10, 40px);
+        grid-template-rows: repeat(10, 40px);
     }
 
-    .cell {
-        width: 45px;
-        height: 45px;
+    .territory {
+        width: 40px;
+        height: 40px;
     }
 
-    .piece {
-        width: 38px;
-        height: 38px;
+    .troops {
         font-size: 1.2em;
     }
 
-    .player-info {
-        flex-direction: column;
-        gap: 10px;
+    .players-stats {
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .turn-indicator {
-        position: relative;
-        left: auto;
-        transform: none;
+    .phase-info {
+        flex-direction: column;
+        gap: 10px;
     }
 }
