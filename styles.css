@@ -19,7 +19,7 @@ body {
     border-radius: 20px;
     padding: 30px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 1200px;
+    max-width: 1400px;
     width: 100%;
 }
 
@@ -31,173 +31,142 @@ h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.game-info {
-    margin-bottom: 20px;
+.game-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
 }
 
-.phase-info {
+.sidebar {
+    width: 300px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     gap: 20px;
-    align-items: center;
+}
+
+.control-panel {
     background: #f8f9fa;
-    padding: 15px;
+    padding: 20px;
     border-radius: 10px;
 }
 
-.turn-indicator {
-    background: #4caf50;
-    color: white;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-weight: bold;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-}
-
-.game-phase, .reinforcements-info {
+.control-panel h3 {
     color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #555;
     font-weight: 500;
 }
 
-.players-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-bottom: 20px;
+.control-group input[type="range"] {
+    width: 100%;
+    margin-bottom: 5px;
 }
 
-.player {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    border-radius: 10px;
-    background: #f8f9fa;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-.player.active {
-    background: #e3f2fd;
-    box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
-    border-color: #2196f3;
-}
-
-.player-icon {
-    font-size: 2.5em;
-    margin-bottom: 10px;
-}
-
-.player-name {
+.control-group span {
+    display: block;
+    text-align: center;
+    color: #667eea;
     font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
+    font-size: 1.1em;
+}
+
+.control-info {
+    background: #fff3cd;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 3px solid #ffc107;
+}
+
+.control-info p {
+    margin: 8px 0;
+    color: #856404;
+    font-size: 0.9em;
+    line-height: 1.4;
 }
 
 .player-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 0.9em;
-    color: #666;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
-.board-container {
+.player-stat {
     display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.board {
-    display: grid;
-    grid-template-columns: repeat(10, 60px);
-    grid-template-rows: repeat(10, 60px);
-    gap: 3px;
-    background: #2c3e50;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.territory {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    justify-content: center;
     align-items: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
-    background: #ecf0f1;
-    position: relative;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
-.territory:hover {
-    transform: scale(1.05);
-    z-index: 1;
+.player-stat.player {
+    background: #e3f2fd;
+    box-shadow: 0 0 10px rgba(103, 58, 183, 0.3);
 }
 
-.territory.red {
-    background: linear-gradient(145deg, #ff6b6b, #ee5a5a);
-    color: white;
+.player-rank {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #667eea;
+    width: 40px;
+    text-align: center;
 }
 
-.territory.blue {
-    background: linear-gradient(145deg, #4dabf7, #339af0);
-    color: white;
-}
-
-.territory.green {
-    background: linear-gradient(145deg, #51cf66, #40c057);
-    color: white;
-}
-
-.territory.yellow {
-    background: linear-gradient(145deg, #ffd43b, #fab005);
+.player-name {
+    flex: 1;
+    margin-left: 15px;
+    font-weight: bold;
     color: #333;
 }
 
-.territory.selected {
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.9);
-    border: 3px solid #ffd700;
-    transform: scale(1.1);
-    z-index: 2;
+.player-stats .player-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 0.85em;
+    color: #666;
 }
 
-.territory.valid-move {
-    box-shadow: 0 0 10px rgba(144, 238, 144, 0.8);
-    border: 2px solid #90ee90;
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #1a1a2e;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
-.territory.attack-move {
-    box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
-    border: 2px solid #ff6b6b;
-}
-
-.troops {
-    font-size: 1.5em;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+#gameCanvas {
+    border: 2px solid #4a4a6a;
+    border-radius: 5px;
+    cursor: crosshair;
+    max-width: 100%;
+    height: auto;
 }
 
 .controls {
     display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .btn {
-    padding: 12px 30px;
+    padding: 12px 24px;
     font-size: 1em;
     border: none;
     border-radius: 25px;
@@ -205,15 +174,7 @@ h1 {
     transition: all 0.3s ease;
     font-weight: bold;
     text-transform: uppercase;
-}
-
-.btn-primary {
     background: linear-gradient(145deg, #667eea, #764ba2);
-    color: white;
-}
-
-.btn-secondary {
-    background: linear-gradient(145deg, #f093fb, #f5576c);
     color: white;
 }
 
@@ -258,10 +219,6 @@ h1 {
     animation: slideIn 0.3s ease;
     max-height: 80vh;
     overflow-y: auto;
-}
-
-.battle-content {
-    max-width: 400px;
 }
 
 @keyframes slideIn {
@@ -312,36 +269,6 @@ h1 {
     line-height: 1.6;
 }
 
-.battle-info {
-    display: flex;
-    justify-content: space-around;
-    gap: 20px;
-}
-
-.attack-info, .defend-info {
-    text-align: center;
-    padding: 15px;
-    border-radius: 10px;
-}
-
-.attack-info {
-    background: #ffebee;
-}
-
-.defend-info {
-    background: #e3f2fd;
-}
-
-.attack-info h4, .defend-info h4 {
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.attack-info p, .defend-info p {
-    margin: 5px 0;
-    color: #666;
-}
-
 #winner-text {
     text-align: center;
     font-size: 1.8em;
@@ -353,6 +280,20 @@ h1 {
     text-align: center;
 }
 
+@media (max-width: 1200px) {
+    .game-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+    }
+    
+    .player-stats {
+        max-height: 200px;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 15px;
@@ -362,26 +303,7 @@ h1 {
         font-size: 1.8em;
     }
 
-    .board {
-        grid-template-columns: repeat(10, 40px);
-        grid-template-rows: repeat(10, 40px);
-    }
-
-    .territory {
-        width: 40px;
-        height: 40px;
-    }
-
-    .troops {
-        font-size: 1.2em;
-    }
-
-    .players-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .phase-info {
-        flex-direction: column;
-        gap: 10px;
+    #gameCanvas {
+        max-width: 100%;
     }
 }
