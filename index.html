@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>战旗游戏</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>战旗游戏</h1>
+        
+        <div class="game-info">
+            <div class="player-info">
+                <div class="player" id="player-red">
+                    <div class="player-icon">🔴</div>
+                    <div class="player-name">红方</div>
+                    <div class="player-pieces">剩余棋子: <span id="red-pieces">12</span></div>
+                </div>
+                <div class="turn-indicator" id="turn-indicator">红方回合</div>
+                <div class="player" id="player-blue">
+                    <div class="player-icon">🔵</div>
+                    <div class="player-name">蓝方</div>
+                    <div class="player-pieces">剩余棋子: <span id="blue-pieces">12</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="restart-btn">重新开始</button>
+            <button class="btn" id="rules-btn">游戏规则</button>
+        </div>
+
+        <div class="modal" id="rules-modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>游戏规则</h2>
+                <div class="rules-content">
+                    <h3>基本规则</h3>
+                    <ul>
+                        <li>游戏在8x8的棋盘上进行</li>
+                        <li>红方先行，双方轮流移动</li>
+                        <li>每方有12个棋子</li>
+                    </ul>
+                    
+                    <h3>移动规则</h3>
+                    <ul>
+                        <li>普通棋子只能向前斜向移动一格</li>
+                        <li>到达对方底线后升级为"王"</li>
+                        <li>王可以向前后任意斜向移动</li>
+                    </ul>
+                    
+                    <h3>吃子规则</h3>
+                    <ul>
+                        <li>当对方棋子在斜前方且其后方为空时，可以跳过吃子</li>
+                        <li>被吃掉的棋子从棋盘移除</li>
+                        <li>王可以向后跳吃</li>
+                        <li>可以连续跳吃多个棋子</li>
+                    </ul>
+                    
+                    <h3>胜利条件</h3>
+                    <ul>
+                        <li>吃掉对方所有棋子</li>
+                        <li>对方无法移动</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="game-over-modal">
+            <div class="modal-content">
+                <h2 id="winner-text">游戏结束</h2>
+                <button class="btn" id="play-again-btn">再玩一次</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
